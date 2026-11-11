@@ -232,7 +232,7 @@ onSnapshot(ref, (snap)=>{
     // On sauvegarde dans le navigateur et on recharge pour afficher
     Object.keys(DB).forEach(k=>{ DB[k]=d[k]; });
     try{ localStorage.setItem("ndiambour_db", j); }catch(e){}
-    setTimeout(()=>{ pulling=false; location.reload(); }, 500);
+    setTimeout(()=>{ pulling=false;  }, 500);
   }catch(e){ pulling=false; }
 });
 </script>
