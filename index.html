@@ -191,4 +191,50 @@ P.params=()=>{const s=DB.set;return head("Paramètres")+`<div class=card style="
 function plogo(el){const fl=el.files[0];if(!fl)return;const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>{const k=Math.min(1,320/Math.max(i.width,i.height)),c=document.createElement("canvas");c.width=Math.round(i.width*k);c.height=Math.round(i.height*k);c.getContext("2d").drawImage(i,0,0,c.width,c.height);const u=c.toDataURL("image/png");$("#plg").value=u;const p=$("#plv");p.src=u;p.style.display="block"};i.src=r.result};r.readAsDataURL(fl)}
 function sp(){const s=DB.set;s.nom=$("#pn").value;s.act=$("#pact").value;s.adr=$("#pa").value;s.tel=$("#pt").value;s.ninea=$("#pni").value;s.rc=$("#prc").value;s.ger=$("#pg").value;s.par=$("#pr").value;s.dev=$("#pd").value;s.logo=$("#plg").value==LOGO0?"":($("#plg").value||"none");const p=$("#pp").value;if(/^\d{4}$/.test(p))s.pin=p;save();render();toast("Paramètres enregistrés")}
 login();
-</script></body></html>
+</script></body>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyCBlVwUkKxuzmf7Zvq8jS--WmqyQ4PJdHY",
+  authDomain: "ndiambour-quincaillerie.firebaseapp.com",
+  projectId: "ndiambour-quincaillerie",
+  storageBucket: "ndiambour-quincaillerie.firebasestorage.app",
+  messagingSenderId: "964100777877",
+  appId: "1:964100777877:web:cdf9f31bd116880e22789c"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const ref = doc(db, "ndiambour", "principal");
+let lastPush = "";
+let pulling = false;
+// Envoi vers Firebase toutes les 3 secondes si ça a changé
+setInterval(()=>{
+  try{
+    if(pulling) return;
+    const j = JSON.stringify(DB);
+    if(j !== lastPush){
+      lastPush = j;
+      setDoc(ref, { data: DB, updatedAt: new Date().toISOString() });
+    }
+  }catch(e){}
+}, 3000);
+// Réception depuis Firebase - si un autre téléphone change, ça recharge ici
+onSnapshot(ref, (snap)=>{
+  if(!snap.exists()) return;
+  try{
+    const d = snap.data().data;
+    if(!d) return;
+    const j = JSON.stringify(d);
+    if(j === lastPush) return;
+    lastPush = j;
+    pulling = true;
+    // On sauvegarde dans le navigateur et on recharge pour afficher
+    Object.keys(DB).forEach(k=>{ DB[k]=d[k]; });
+    try{ localStorage.setItem("ndiambour_db", j); }catch(e){}
+    setTimeout(()=>{ pulling=false; location.reload(); }, 500);
+  }catch(e){ pulling=false; }
+});
+</script>
+  </body>
+</html>
